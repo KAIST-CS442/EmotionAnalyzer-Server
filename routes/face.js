@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var fs = require('fs');
 
 /* GET face post data */
 
@@ -9,13 +10,14 @@ router.post('/', function(req, res, next) {
     //console.log(req.body);
     var userId = req.body.userId;
     var videoId = req.body.videoId;
+    var time = req.body.time; // time in millisecond
     var image = req.body.image;
     console.log(userId);
     console.log(videoId);
-    base64_decode(image, 'test.jpg');
+    console.log(time);
+    base64_decode(image, 'test_image/test' + time + '.jpg');
 });
 
-var fs = require('fs');
 
 
 /* Referred https://www.hacksparrow.com/base64-encoding-decoding-in-node-js.html for base64 encoding and decoding */
