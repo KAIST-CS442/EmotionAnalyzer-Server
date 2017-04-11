@@ -5,40 +5,51 @@ var request = require('request');
 require('dotenv').config();
 
 
-var dirName = 'local_image';
+var baseDirName = 'local2_image';
 /* GET face post data */
 
 router.post('/', function(req, res, next) {
-    res.send({"ok":"Succeed"});
     console.log("post requested");
     //console.log(req.body);
     var userId = req.body.userId;
     var videoId = req.body.videoId;
     var time = req.body.time; // time in millisecond
     var image = req.body.image;
-    //console.log(userId);
-    //console.log(videoId);
-    //console.log(time);
-    var fileName = 'test' + time + '.jpg';
-    base64_decode(image, dirName + '/' + fileName);
-    console.log(fileName);
-    requestAPI(fileName);
+    console.log(userId);
+    console.log(videoId);
+    console.log(time);
+    var newDirName = baseDirName + videoId;
+    if (!fs.existsSync(newDirName)) {
+        try {
+            fs.mkdirSync(newDirName);
+        } catch (err) {
+            if (err.code !== 'EEXIST') throw err
+        }
+    }
+    console.log("middle");
+    var fileName = 'image' + '_' + time + '.jpg';
+    var fullFileName = newDirName + '/' + fileName;
+    base64_decode(image, fullFileName);
+    console.log(fullFileName);
+    requestAPI(newDirName, fileName);
+
+    res.send({"ok":"Succeed"});
 });
 
 router.get('/', function(req, res) {
     //requestAPI('test0.jpg');
     // Loop through files in 'test_image' directory
-    fs.readdir(dirName ,function (err, files) {
+    fs.readdir(baseDirName ,function (err, files) {
         files.forEach(function (file, index) {
-            requestAPI(file);
+            requestAPI(baseDirName, file);
             //requestAPI('test0.jpg');
         });
     });
 });
 
-function requestAPI(file) {
+function requestAPI(dirName, fileName) {
     console.log("requested to API");
-    var bitmap = fs.readFileSync(dirName + '/' + file);
+    var bitmap = fs.readFileSync(dirName + '/' + fileName);
 
     var headers = { 
         'Content-Type': 'application/octet-stream',
@@ -56,6 +67,14 @@ function requestAPI(file) {
         if (!error && response.statusCode == 200) {
             var object = JSON.parse(body);
             fs.appendFileSync(dirName + '/' + 'result.txt', JSON.stringify(object)+'\n', 'utf8');
+            if (object.length != 0){
+                var emotions = object[0].scores;
+                var addLine = "" + emotions.anger + " " +  emotions.contempt + " " + emotions.disgust + " " + emotions.fear + " " + emotions.happiness + " " + emotions.neutral + " " +  emotions.sadness + " " + emotions.surprise + "\n";
+                fs.appendFileSync(dirName + '/' + 'parsed_result.txt', addLine);
+            } else {
+                var addLine = "\n";
+                fs.appendFileSync(dirName + '/' + 'parsed_result.txt', addLine);
+            }
             console.log(object);
         } else {
             console.log(response.statusCode);
@@ -78,6 +97,7 @@ function base64_decode(base64str, file) {
     // create buffer object from base64 encoded string, it is important to tell the constructor that the string is base64 encoded
     var bitmap = new Buffer(base64str, 'base64');
     // write buffer to file
+    console.log(file);
     fs.writeFileSync(file, bitmap);
     console.log('******** File created from base64 encoded string ********');
 }
