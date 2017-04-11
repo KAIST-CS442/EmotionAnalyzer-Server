@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var fs = require('fs');
+var request = require('request');
+require('dotenv').config();
 
 /* GET face post data */
 
@@ -36,6 +38,24 @@ function base64_decode(base64str, file) {
     // write buffer to file
     fs.writeFileSync(file, bitmap);
     console.log('******** File created from base64 encoded string ********');
+    var headers = {
+      'Content-Type': 'application/octet-stream',
+      'Ocp-Apim-Subscription-Key': process.env.EMOTION_API_KEY 
+    }
+
+    var options = {
+      url: "https://westus.api.cognitive.microsoft.com/emotion/v1.0/recognize",
+      method: 'POST',
+      headers: headers,
+      body: bitmap
+    }
+
+    request(options, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        var object = JSON.parse(body);
+        console.log(object);
+      }
+    });
 }
 
 module.exports = router;
