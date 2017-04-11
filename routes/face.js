@@ -5,7 +5,7 @@ var request = require('request');
 require('dotenv').config();
 
 
-var baseDirName = 'local2_image';
+var baseDirName = 'local3_image';
 /* GET face post data */
 
 router.post('/', function(req, res, next) {
@@ -31,7 +31,7 @@ router.post('/', function(req, res, next) {
     var fullFileName = newDirName + '/' + fileName;
     base64_decode(image, fullFileName);
     console.log(fullFileName);
-    requestAPI(newDirName, fileName);
+    requestAPI(newDirName, fileName, time);
 
     res.send({"ok":"Succeed"});
 });
@@ -41,13 +41,13 @@ router.get('/', function(req, res) {
     // Loop through files in 'test_image' directory
     fs.readdir(baseDirName ,function (err, files) {
         files.forEach(function (file, index) {
-            requestAPI(baseDirName, file);
+            requestAPI(baseDirName, file, time);
             //requestAPI('test0.jpg');
         });
     });
 });
 
-function requestAPI(dirName, fileName) {
+function requestAPI(dirName, fileName, time) {
     console.log("requested to API");
     var bitmap = fs.readFileSync(dirName + '/' + fileName);
 
@@ -69,12 +69,13 @@ function requestAPI(dirName, fileName) {
             fs.appendFileSync(dirName + '/' + 'result.txt', JSON.stringify(object)+'\n', 'utf8');
             if (object.length != 0){
                 var emotions = object[0].scores;
-                var addLine = "" + emotions.anger + " " +  emotions.contempt + " " + emotions.disgust + " " + emotions.fear + " " + emotions.happiness + " " + emotions.neutral + " " +  emotions.sadness + " " + emotions.surprise + "\n";
+                var addLine = "" + time + " " + emotions.anger + " " +  emotions.contempt + " " + emotions.disgust + " " + emotions.fear + " " + emotions.happiness + " " + emotions.neutral + " " +  emotions.sadness + " " + emotions.surprise + "\n";
                 fs.appendFileSync(dirName + '/' + 'parsed_result.txt', addLine);
             } else {
-                var addLine = "\n";
+                var addLine = "" + time + "\n";
                 fs.appendFileSync(dirName + '/' + 'parsed_result.txt', addLine);
             }
+            console.log("done for time: " + time);
             console.log(object);
         } else {
             console.log(response.statusCode);
