@@ -4,6 +4,8 @@ var fs = require('fs');
 var request = require('request');
 require('dotenv').config();
 
+
+var dirName = 'local_image';
 /* GET face post data */
 
 router.post('/', function(req, res, next) {
@@ -14,41 +16,52 @@ router.post('/', function(req, res, next) {
     var videoId = req.body.videoId;
     var time = req.body.time; // time in millisecond
     var image = req.body.image;
-    console.log(userId);
-    console.log(videoId);
-    console.log(time);
-    base64_decode(image, 'test_image/test' + time + '.jpg');
+    //console.log(userId);
+    //console.log(videoId);
+    //console.log(time);
+    var fileName = 'test' + time + '.jpg';
+    base64_decode(image, dirName + '/' + fileName);
+    console.log(fileName);
+    requestAPI(fileName);
 });
 
 router.get('/', function(req, res) {
-
+    //requestAPI('test0.jpg');
     // Loop through files in 'test_image' directory
-    fs.readdir('test_image', function (err, files) {
-      files.forEach(function (file, index) {
-        var bitmap = fs.readFileSync('test_image/' + file);
-
-        var headers = {
-          'Content-Type': 'application/octet-stream',
-          'Ocp-Apim-Subscription-Key': process.env.EMOTION_API_KEY 
-        }
-
-        var options = {
-          url: "https://westus.api.cognitive.microsoft.com/emotion/v1.0/recognize",
-          method: 'POST',
-          headers: headers,
-          body: bitmap
-        }
-
-        request(options, function (error, response, body) {
-          if (!error && response.statusCode == 200) {
-            var object = JSON.parse(body);
-            console.log(object);
-          }
+    fs.readdir(dirName ,function (err, files) {
+        files.forEach(function (file, index) {
+            requestAPI(file);
+            //requestAPI('test0.jpg');
         });
-        
-      });
     });
 });
+
+function requestAPI(file) {
+    console.log("requested to API");
+    var bitmap = fs.readFileSync(dirName + '/' + file);
+
+    var headers = { 
+        'Content-Type': 'application/octet-stream',
+        'Ocp-Apim-Subscription-Key': process.env.EMOTION_API_KEY 
+    }   
+
+    var options = { 
+        url: "https://westus.api.cognitive.microsoft.com/emotion/v1.0/recognize",
+        method: 'POST',
+        headers: headers,
+        body: bitmap
+    }   
+
+    request(options, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            var object = JSON.parse(body);
+            fs.appendFileSync(dirName + '/' + 'result.txt', JSON.stringify(object)+'\n', 'utf8');
+            console.log(object);
+        } else {
+            console.log(response.statusCode);
+        }
+    }); 
+}
 
 
 /* Referred https://www.hacksparrow.com/base64-encoding-decoding-in-node-js.html for base64 encoding and decoding */
