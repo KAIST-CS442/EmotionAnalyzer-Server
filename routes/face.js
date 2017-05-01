@@ -18,7 +18,7 @@ router.post('/', function(req, res, next) {
     console.log(userId);
     console.log(videoId);
     console.log(time);
-    var newDirName = baseDirName + videoId;
+    var newDirName = baseDirName + videoId + userId;
     if (!fs.existsSync(newDirName)) {
         try {
             fs.mkdirSync(newDirName);
