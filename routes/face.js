@@ -26,7 +26,6 @@ router.post('/', function(req, res, next) {
             if (err.code !== 'EEXIST') throw err
         }
     }
-    console.log("middle");
     var fileName = 'image' + '_' + time + '.jpg';
     var fullFileName = newDirName + '/' + fileName;
     base64_decode(image, fullFileName);
@@ -90,7 +89,7 @@ function requestAPI(dirName, fileName, time) {
             console.log("done for time: " + time);
             console.log(object);
         } else {
-            console.log(response.statusCode);
+            console.log("Request failed: " + response.statusCode);
         }
     }); 
 }
