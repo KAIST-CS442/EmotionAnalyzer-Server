@@ -32,19 +32,31 @@ router.post('/', function(req, res, next) {
     base64_decode(image, fullFileName);
     console.log(fullFileName);
     requestAPI(newDirName, fileName, time);
-
     res.send({"ok":"Succeed"});
 });
 
+/* In browser enter url: http://localhost:3000/face?dirName=DirectoryNameOfYourTargetFolder
+ * Erase or backup existing result.txt or parsed_result.txt files.
+*/
 router.get('/', function(req, res) {
-    //requestAPI('test0.jpg');
+    console.log(req.query.dirName); 
     // Loop through files in 'test_image' directory
-    fs.readdir(baseDirName ,function (err, files) {
-        files.forEach(function (file, index) {
-            requestAPI(baseDirName, file, time);
-            //requestAPI('test0.jpg');
-        });
+    fs.readdir(req.query.dirName,function (err, files) {
+        console.log(files);
+        for (var i = 0; i < files.length; i++) {
+            setTimeout(function (fileName, i) {
+                var splitString = fileName.split(".");
+                if (splitString[splitString.length-1] != "jpg") {
+                    return;
+                }
+                var time = splitString[0].split("_")[1];
+                console.log("Processing " + i + "th file");
+                console.log(fileName);
+                requestAPI(req.query.dirName, fileName, time);
+            }, i * 1000 * 5, files[i], i) // delay about 5 seconds;
+        }
     });
+    res.send({"ok":"Succeed"});
 });
 
 function requestAPI(dirName, fileName, time) {
