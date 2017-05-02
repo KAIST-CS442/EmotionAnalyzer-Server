@@ -41,18 +41,22 @@ router.get('/', function(req, res) {
     console.log(req.query.dirName); 
     // Loop through files in 'test_image' directory
     fs.readdir(req.query.dirName,function (err, files) {
-        console.log(files);
+        var targetFiles = [];
         for (var i = 0; i < files.length; i++) {
-            setTimeout(function (fileName, i) {
+            var token = files[i].split(".");
+            if (token[token.length-1] == "jpg") {
+                targetFiles.push(files[i]);
+            }
+        }
+        console.log(targetFiles);
+        for (var i = 0; i < targetFiles.length; i++) {
+            setTimeout(function (fileName, i, filesLength) {
                 var splitString = fileName.split(".");
-                if (splitString[splitString.length-1] != "jpg") {
-                    return;
-                }
                 var time = splitString[0].split("_")[1];
-                console.log("Processing " + i + "th file");
+                console.log("Processing " + (i+1) + "th file out of " + filesLength + " files");
                 console.log(fileName);
                 requestAPI(req.query.dirName, fileName, time);
-            }, i * 1000 * 5, files[i], i) // delay about 5 seconds;
+            }, i * 1000 * 5, targetFiles[i], i, targetFiles.length) // delay about 5 seconds;
         }
     });
     res.send({"ok":"Succeed"});
