@@ -7,7 +7,11 @@ var Reaction = require('../models/Reaction');
 require('dotenv').config();
 
 var baseDirName = 'local3_image';
-/* GET face post data */
+
+/* 
+ * POST face image with video information
+ * Parameters: userId, videoId, time, image
+ */
 
 router.post('/', function(req, res, next) {
     console.log("post requested");
@@ -88,6 +92,7 @@ function requestAPI(dirName, fileName, time, userId, videoId) {
                 var addLine = "" + time + " " + emotions.anger + " " +  emotions.contempt + " " + emotions.disgust + " " + emotions.fear + " " + emotions.happiness + " " + emotions.neutral + " " +  emotions.sadness + " " + emotions.surprise + "\n";
                 fs.appendFileSync(dirName + '/' + 'parsed_result.txt', addLine);
 
+                // Save new reaction datat to MongoDB
                 var newReaction = new Reaction({
                   video_id: videoId,
                   user_id: userId,
