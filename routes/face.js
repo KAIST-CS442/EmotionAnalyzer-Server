@@ -2,8 +2,9 @@ var express = require('express');
 var router = express.Router();
 var fs = require('fs');
 var request = require('request');
+var mongoose = require('mongoose');
+var Reaction = require('../models/Reaction');
 require('dotenv').config();
-
 
 var baseDirName = 'local3_image';
 /* GET face post data */
@@ -30,7 +31,7 @@ router.post('/', function(req, res, next) {
     var fullFileName = newDirName + '/' + fileName;
     base64_decode(image, fullFileName);
     console.log(fullFileName);
-    requestAPI(newDirName, fileName, time);
+    requestAPI(newDirName, fileName, time, userId, videoId);
     res.send({"ok":"Succeed"});
 });
 
@@ -62,7 +63,7 @@ router.get('/', function(req, res) {
     res.send({"ok":"Succeed"});
 });
 
-function requestAPI(dirName, fileName, time) {
+function requestAPI(dirName, fileName, time, userId, videoId) {
     console.log("requested to API");
     var bitmap = fs.readFileSync(dirName + '/' + fileName);
 
@@ -86,6 +87,15 @@ function requestAPI(dirName, fileName, time) {
                 var emotions = object[0].scores;
                 var addLine = "" + time + " " + emotions.anger + " " +  emotions.contempt + " " + emotions.disgust + " " + emotions.fear + " " + emotions.happiness + " " + emotions.neutral + " " +  emotions.sadness + " " + emotions.surprise + "\n";
                 fs.appendFileSync(dirName + '/' + 'parsed_result.txt', addLine);
+
+                var newReaction = new Reaction({
+                  video_id: videoId,
+                  user_id: userId,
+                  time: time,
+                  happiness: emotions.happiness,
+                  neutral: emotions.neutral,
+                });
+                newReaction.save();
             } else {
                 var addLine = "" + time + "\n";
                 fs.appendFileSync(dirName + '/' + 'parsed_result.txt', addLine);
