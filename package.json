@@ -16,6 +16,8 @@
     "morgan": "~1.7.0",
     "pug": "~2.0.0-beta6",
     "request": "^2.81.0",
-    "serve-favicon": "~2.3.0"
+    "serve-favicon": "~2.3.0",
+    "youtube-dl": "~1.11.1",
+    "fluent-ffmpeg": "~2.1.2"
   }
 }
