@@ -67,7 +67,15 @@ function generate_highlight(query_video_id) {
                     if (tolerateCount > 3) {
                         isHighlight = false;
                         regionEndIndex = i;
-
+                        if (regionEndIndex - regionStartIndex > 3) {
+                            var newHighlight = new Highlight({
+                                video_id: query_video_id,
+                                start: regionStartIndex,
+                                end: regionEndIndex,
+                                highlight_url: "abc" // TODO: Create a copy of highlight and store the url into the database.
+                            });
+                            newHighlight.save();
+                        }
                     }
                 }
             }
