@@ -28,6 +28,8 @@ router.get('/', function(req, res, next) {
 });
 
 function generate_highlight(query_video_id) {
+    var highlightId = 0;
+
     Reaction.find({
         video_id: query_video_id
     }).
@@ -58,7 +60,6 @@ function generate_highlight(query_video_id) {
         var tolerateCount = 0;
         var regionStartIndex = 0;
         var regionEndIndex = 0;
-        var highlightId = 0;
         for (var i = 0; i < happinessAverage.length; i++) {
             if (happinessAverage[i] > 0.7) {
                 if (!isHighlight) {
@@ -74,46 +75,14 @@ function generate_highlight(query_video_id) {
                     if (tolerateCount > 6) {
                         isHighlight = false;
                         regionEndIndex = i;
-                        if (regionEndIndex - regionStartIndex > 3) {
+                        if (regionEndIndex - regionStartIndex > 5) {
                             var newHighlight = new Highlight({
                                 video_id: query_video_id,
                                 start: regionStartIndex,
                                 end: regionEndIndex,
-                                highlight_url: "abc" // TODO: Create a copy of highlight and store the url into the database.
+                                highlight_url: "./" + query_video_id + '_highlight_' + highlightId + '.mp4'
                             });
                             newHighlight.save();
-
-                            var video = youtubedl('http://www.youtube.com/watch?v=' + query_video_id, [], {maxBuffer: 100000*1024});
-                            video.on('info', function(info) {
-                                console.log('Download started');
-                                console.log('filename: ' + info.filename);
-                                console.log('size: ' + info.size);
-                            });
-                            video.pipe(fs.createWriteStream(query_video_id + '.mp4'));
-
-                            video.on('end', function() {
-                                var start = regionStartIndex - 3;
-                                if (start < 0) start = 0;
-                                var duration = regionEndIndex - start;
-
-                                console.log("ffmpeg start: " + start);
-                                console.log("ffmpeg duration: " + duration);
-
-                                ffmpeg(query_video_id + '.mp4')
-                                .setStartTime(start)
-                                .setDuration(duration)
-                                .output(query_video_id + '_highlight_' + highlightId + '.mp4')
-                                .on('end', function(err) {
-                                    if(!err)
-                                    {
-                                        console.log('conversion Done');
-                                    }
-                                })
-                                .on('error', function(err){
-                                    console.log('error: ', +err);
-                                }).run();
-                            });
-
                             highlightId += 1;
                         }
                     }
@@ -121,6 +90,50 @@ function generate_highlight(query_video_id) {
             }
         }
     });
+
+    if (highlightId >= 0) {
+        var video = youtubedl('http://www.youtube.com/watch?v=' + query_video_id, [], {maxBuffer: 100000*1024});
+        video.on('info', function(info) {
+            console.log('Download started');
+            console.log('filename: ' + info._filename);
+            console.log('size: ' + info.size);
+        });
+        video.pipe(fs.createWriteStream(query_video_id + '.mp4'));
+
+        video.on('end', function() {
+            console.log('Download done');
+            Highlight.find({
+                video_id: query_video_id
+            })
+            .exec(function (err, highlights) {
+                for (var i = 0; i < highlights.length; i++) {
+                    var start = highlights[i].start;
+                    var end = highlights[i].end;
+
+                    start -= 3;
+                    if (start < 0) start = 0;
+                    var duration = end - start;
+                    console.log("ffmpeg start: " + start);
+                    console.log("ffmpeg duration: " + duration);
+                    console.log(query_video_id + '.mp4');
+
+                    ffmpeg('./' + query_video_id + '.mp4')
+                    .setStartTime(start)
+                    .setDuration(parseInt(duration))
+                    .output('./' + query_video_id + '_highlight_' + i + '.mp4')
+                    .on('end', function(err) {
+                        if(!err)
+                        {
+                            console.log('conversion Done');
+                        }
+                    })
+                    .on('error', function(err){
+                        console.error(err);
+                    }).run();
+                }
+            });
+        });
+    }
 }
 
 /*
