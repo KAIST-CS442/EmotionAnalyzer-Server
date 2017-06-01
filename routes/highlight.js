@@ -11,29 +11,40 @@ var fs = require('fs');
 var youtubedl = require('youtube-dl');
 var ffmpeg = require('fluent-ffmpeg');
 
+var cron = require('node-cron');
+
+cron.schedule('* * * * *', function() {
+    Video.find()
+    .exec(function (err, videos) {
+        for (var i = 0; i < videos.length; i++) {
+            generate_highlight(videos.video_id);
+        }
+    });
+});
 
 /*
  * GET highlight info
  * Query: video_id (?video_id=xxxxx)
  */
 router.get('/', function(req, res, next) {
-    generate_highlight(req.query.video_id);
+    //generate_highlight(req.query.video_id);
     Highlight.findOne({
         video_id: req.query.video_id
-    }).
-    exec(function (err, highlight) {
+    })
+    .exec(function (err, highlight) {
         if (err) return console.log(err);
         res.send(highlight);
     });
 });
 
 function generate_highlight(query_video_id) {
+    console.log("generate highlight for " + query_video_id);
     var highlightId = 0;
 
     Reaction.find({
         video_id: query_video_id
-    }).
-    exec(function (err, reactions) {
+    })
+    .exec(function (err, reactions) {
         var happinessAt = {};
         var maxTime = 0;
         /* Build a map (floor(time) -> listof<happiness_value>)
