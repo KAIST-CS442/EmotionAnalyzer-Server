@@ -25,9 +25,9 @@ router.post('/', function(req, res, next) {
     console.log(videoId);
     console.log(time);
     Video.findAndModify({
-      query: {video_id: videoId}, 
-      upsert: true,
-      new: true,
+        query: {video_id: videoId}, 
+        upsert: true,
+        new: true,
     });
   
     var newDirName = baseDirName + videoId + userId;

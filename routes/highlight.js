@@ -6,6 +6,7 @@ var mongoose = require('mongoose');
 
 var Highlight = require('../models/Highlight');
 var Reaction = require('../models/Reaction');
+var Video = require('../models/Video');
 
 var fs = require('fs');
 var youtubedl = require('youtube-dl');
@@ -17,7 +18,7 @@ cron.schedule('* * * * *', function() {
     Video.find()
     .exec(function (err, videos) {
         for (var i = 0; i < videos.length; i++) {
-            generate_highlight(videos.video_id);
+            generate_highlight(videos[i].video_id);
         }
     });
 });
