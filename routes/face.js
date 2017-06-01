@@ -4,6 +4,7 @@ var fs = require('fs');
 var request = require('request');
 var mongoose = require('mongoose');
 var Reaction = require('../models/Reaction');
+var Video = require('../models/Video');
 require('dotenv').config();
 
 var baseDirName = 'local3_image';
@@ -23,6 +24,12 @@ router.post('/', function(req, res, next) {
     console.log(userId);
     console.log(videoId);
     console.log(time);
+    Video.findAndModify({
+      query: {video_id: videoId}, 
+      upsert: true,
+      new: true,
+    });
+  
     var newDirName = baseDirName + videoId + userId;
     if (!fs.existsSync(newDirName)) {
         try {
