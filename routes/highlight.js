@@ -37,7 +37,7 @@ function generate_highlight(query_video_id) {
         /* Build a map (floor(time) -> listof<happiness_value>)
            and find maximum value of timestamp. */
         for (var i = 0; i < reactions.length; i++) {
-            var time = parseInt(reactions[i].time);
+            var time = parseInt(reactions[i].time / 1000);
             if (time > maxTime) maxTime = time;
             happinessAt[time] = happinessAt[time] || [];
             happinessAt[time].push(reactions[i].happiness);
@@ -64,13 +64,14 @@ function generate_highlight(query_video_id) {
                 if (!isHighlight) {
                     isHighlight = true;
                     regionStartIndex = i;
+                    console.log("regionStartIndex: " + regionStartIndex);
                 }
                 tolerateCount = 0;
             }
             else {
                 if (isHighlight) {
                     tolerateCount += 1;
-                    if (tolerateCount > 3) {
+                    if (tolerateCount > 6) {
                         isHighlight = false;
                         regionEndIndex = i;
                         if (regionEndIndex - regionStartIndex > 3) {
@@ -82,7 +83,7 @@ function generate_highlight(query_video_id) {
                             });
                             newHighlight.save();
 
-                            var video = youtubedl('http://www.youtube.com/watch?v=90AiXO1pAiA' + query_video_id);
+                            var video = youtubedl('http://www.youtube.com/watch?v=' + query_video_id, [], {maxBuffer: 100000*1024});
                             video.on('info', function(info) {
                                 console.log('Download started');
                                 console.log('filename: ' + info.filename);
@@ -94,6 +95,9 @@ function generate_highlight(query_video_id) {
                                 var start = regionStartIndex - 3;
                                 if (start < 0) start = 0;
                                 var duration = regionEndIndex - start;
+
+                                console.log("ffmpeg start: " + start);
+                                console.log("ffmpeg duration: " + duration);
 
                                 ffmpeg(query_video_id + '.mp4')
                                 .setStartTime(start)

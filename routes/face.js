@@ -74,14 +74,15 @@ function requestAPI(dirName, fileName, time, userId, videoId) {
     var headers = { 
         'Content-Type': 'application/octet-stream',
         'Ocp-Apim-Subscription-Key': process.env.EMOTION_API_KEY 
-    }   
+    };
+    console.log(process.env.EMOTION_API_KEY);
 
     var options = { 
         url: "https://westus.api.cognitive.microsoft.com/emotion/v1.0/recognize",
         method: 'POST',
         headers: headers,
         body: bitmap
-    }   
+    };
 
     request(options, function (error, response, body) {
         if (!error && response.statusCode == 200) {
@@ -89,7 +90,7 @@ function requestAPI(dirName, fileName, time, userId, videoId) {
             fs.appendFileSync(dirName + '/' + 'result.txt', JSON.stringify(object)+'\n', 'utf8');
             if (object.length != 0){
                 var emotions = object[0].scores;
-                var addLine = "" + time + " " + emotions.anger + " " +  emotions.contempt + " " + emotions.disgust + " " + emotions.fear + " " + emotions.happiness + " " + emotions.neutral + " " +  emotions.sadness + " " + emotions.surprise + "\n";
+                var addLine = "" + time + " " + emotions.happiness + " " + emotions.neutral + "\n";
                 fs.appendFileSync(dirName + '/' + 'parsed_result.txt', addLine);
 
                 // Save new reaction datat to MongoDB
