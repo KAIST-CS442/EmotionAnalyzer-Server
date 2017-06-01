@@ -7,6 +7,11 @@ var mongoose = require('mongoose');
 var Highlight = require('../models/Highlight');
 var Reaction = require('../models/Reaction');
 
+var fs = require('fs');
+var youtubedl = require('youtube-dl');
+var ffmpeg = require('fluent-ffmpeg');
+
+
 /*
  * GET highlight info
  * Query: video_id (?video_id=xxxxx)
@@ -53,6 +58,7 @@ function generate_highlight(query_video_id) {
         var tolerateCount = 0;
         var regionStartIndex = 0;
         var regionEndIndex = 0;
+        var highlightId = 0;
         for (var i = 0; i < happinessAverage.length; i++) {
             if (happinessAverage[i] > 0.7) {
                 if (!isHighlight) {
@@ -75,6 +81,36 @@ function generate_highlight(query_video_id) {
                                 highlight_url: "abc" // TODO: Create a copy of highlight and store the url into the database.
                             });
                             newHighlight.save();
+
+                            var video = youtubedl('http://www.youtube.com/watch?v=90AiXO1pAiA' + query_video_id);
+                            video.on('info', function(info) {
+                                console.log('Download started');
+                                console.log('filename: ' + info.filename);
+                                console.log('size: ' + info.size);
+                            });
+                            video.pipe(fs.createWriteStream(query_video_id + '.mp4'));
+
+                            video.on('end', function() {
+                                var start = regionStartIndex - 3;
+                                if (start < 0) start = 0;
+                                var duration = regionEndIndex - start;
+
+                                ffmpeg(query_video_id + '.mp4')
+                                .setStartTime(start)
+                                .setDuration(duration)
+                                .output(query_video_id + '_highlight_' + highlightId + '.mp4')
+                                .on('end', function(err) {
+                                    if(!err)
+                                    {
+                                        console.log('conversion Done');
+                                    }
+                                })
+                                .on('error', function(err){
+                                    console.log('error: ', +err);
+                                }).run();
+                            });
+
+                            highlightId += 1;
                         }
                     }
                 }
