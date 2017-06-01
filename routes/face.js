@@ -24,11 +24,10 @@ router.post('/', function(req, res, next) {
     console.log(userId);
     console.log(videoId);
     console.log(time);
-    Video.findAndModify({
-      query: {video_id: videoId}, 
-      upsert: true,
-      new: true,
-    });
+    var newVideo = new Video({
+      video_id: videoId
+    }); 
+    newVideo.save();
   
     var newDirName = baseDirName + videoId + userId;
     if (!fs.existsSync(newDirName)) {
