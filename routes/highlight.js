@@ -14,7 +14,7 @@ var ffmpeg = require('fluent-ffmpeg');
 
 var cron = require('node-cron');
 
-cron.schedule('* * * * *', function() {
+cron.schedule('*/5 * * * *', function() {
     Video.find()
     .exec(function (err, videos) {
         for (var i = 0; i < videos.length; i++) {
@@ -34,7 +34,12 @@ router.get('/', function(req, res, next) {
     })
     .exec(function (err, highlight) {
         if (err) return console.log(err);
-        res.send(highlight);
+        if (!highlight) {
+            console.log("No highlight")
+        }
+        else {
+            res.end("http://143.248.198.101:3000/" + highlight.highlight_url);
+        }
     });
 });
 
@@ -92,7 +97,7 @@ function generate_highlight(query_video_id) {
                                 video_id: query_video_id,
                                 start: regionStartIndex,
                                 end: regionEndIndex,
-                                highlight_url: "./" + query_video_id + '_highlight_' + highlightId + '.mp4'
+                                highlight_url: query_video_id + '_highlight_' + highlightId + '.mp4'
                             });
                             newHighlight.save();
                             highlightId += 1;
@@ -110,7 +115,7 @@ function generate_highlight(query_video_id) {
             console.log('filename: ' + info._filename);
             console.log('size: ' + info.size);
         });
-        video.pipe(fs.createWriteStream(query_video_id + '.mp4'));
+        video.pipe(fs.createWriteStream('./public/' + query_video_id + '.mp4'));
 
         video.on('end', function() {
             console.log('Download done');
@@ -129,10 +134,10 @@ function generate_highlight(query_video_id) {
                     console.log("ffmpeg duration: " + duration);
                     console.log(query_video_id + '.mp4');
 
-                    ffmpeg('./' + query_video_id + '.mp4')
+                    ffmpeg('./public/' + query_video_id + '.mp4')
                     .setStartTime(start)
                     .setDuration(parseInt(duration))
-                    .output('./' + query_video_id + '_highlight_' + i + '.mp4')
+                    .output('./public/' + query_video_id + '_highlight_' + i + '.mp4')
                     .on('end', function(err) {
                         if(!err)
                         {
