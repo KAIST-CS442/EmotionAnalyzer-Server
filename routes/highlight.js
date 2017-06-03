@@ -18,7 +18,7 @@ cron.schedule('*/5 * * * *', function() {
     Video.find()
     .exec(function (err, videos) {
         for (var i = 0; i < videos.length; i++) {
-            generate_highlight(videos[i].video_id);
+            generate_highlight(videos[i].video_id, videos[i].video_name);
         }
     });
 });
@@ -38,14 +38,30 @@ router.get('/', function(req, res, next) {
             console.log("No highlight")
         }
         else {
-            res.end("http://143.248.198.101:3000/" + highlight.highlight_url);
+            res.end("http://192.249.28.34:3000/" + highlight.highlight_url);
         }
     });
 });
 
-function generate_highlight(query_video_id) {
+/*
+ * GET list of highlights
+ */
+router.get('/list', function(req, res, next) {
+    Highlight
+    .find()
+    .select('video_id video_name highlight_url thumbnail_url')
+    .exec(function (err, highlights) {
+        console.log(highlights);    
+        if (err) console.error(err);
+        res.end(highlights);
+    });
+});
+
+function generate_highlight(query_video_id, query_video_name) {
     console.log("generate highlight for " + query_video_id);
     var highlightId = 0;
+    /* temp code */
+    var thumbnailId = 0;
 
     Reaction.find({
         video_id: query_video_id
@@ -93,11 +109,14 @@ function generate_highlight(query_video_id) {
                         isHighlight = false;
                         regionEndIndex = i;
                         if (regionEndIndex - regionStartIndex > 5) {
+                            
                             var newHighlight = new Highlight({
                                 video_id: query_video_id,
                                 start: regionStartIndex,
                                 end: regionEndIndex,
-                                highlight_url: query_video_id + '_highlight_' + highlightId + '.mp4'
+                                highlight_url: query_video_id + '_highlight_' + highlightId + '.mp4',
+                                thumbnail_url: query_video_id + '_thumbnail_' + thumbnailId + '.jpg',
+                                video_name: query_video_name,
                             });
                             newHighlight.save();
                             highlightId += 1;
