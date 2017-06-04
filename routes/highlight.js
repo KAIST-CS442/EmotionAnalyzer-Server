@@ -45,8 +45,8 @@ router.get('/', function(req, res, next) {
 
 /*
  * GET list of highlights
- * returns [{ video_id: 'video_id', video_name: 'video_name', 
- * highlight_url: 'highlight_url', thumbnail_url: 'thumbnail_url'}]
+ * returns {"items": [{ video_id: 'video_id', video_name: 'video_name', 
+ * highlight_url: 'highlight_url', thumbnail_url: 'thumbnail_url'}]}
  */
 router.get('/list', function(req, res, next) {
     Highlight
@@ -55,7 +55,9 @@ router.get('/list', function(req, res, next) {
     .exec(function (err, highlights) {
         console.log(highlights);    
         if (err) console.error(err);
-        res.end(highlights);
+        res.end(JSON.stringify({
+			items: highlights
+		}));
     });
 });
 
