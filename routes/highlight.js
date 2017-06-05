@@ -170,6 +170,13 @@ function generate_highlight(query_video_id, query_video_name) {
                     .on('error', function(err){
                         console.error(err);
                     }).run();
+
+                    ffmpeg('./public/' + query_video_id + '.mp4')
+                    .screenshots({
+                        timestamps: [start],
+                        filename: query_video_id + '_thumbnail_' + i + '.jpg',
+                        folder: './public/'
+                    });
                 }
             });
         });
