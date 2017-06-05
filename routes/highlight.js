@@ -38,7 +38,8 @@ router.get('/', function(req, res, next) {
             console.log("No highlight")
         }
         else {
-            res.end("http://192.249.28.34:3000/" + highlight.highlight_url);
+            // Uncomment this when using this API for testing.
+            // res.end("http://143.248.198.68:3000/" + highlight.highlight_url);
         }
     });
 });
@@ -124,6 +125,7 @@ function generate_highlight(query_video_id, query_video_name) {
                             });
                             newHighlight.save();
                             highlightId += 1;
+                            thumbnailId += 1;
                         }
                     }
                 }
