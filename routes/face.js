@@ -3,6 +3,8 @@ var router = express.Router();
 var fs = require('fs');
 var request = require('request');
 var mongoose = require('mongoose');
+var fetchVideoInfo = require('youtube-info');
+
 var Reaction = require('../models/Reaction');
 var Video = require('../models/Video');
 require('dotenv').config();
@@ -24,11 +26,14 @@ router.post('/', function(req, res, next) {
     console.log(userId);
     console.log(videoId);
     console.log(time);
-    var newVideo = new Video({
-      video_id: videoId
-    }); 
-    newVideo.save();
-  
+    fetchVideoInfo(videoId).then(function (videoInfo) {
+        var newVideo = new Video({
+          video_id: videoId,
+          video_name: videoInfo.title,
+        }); 
+
+        newVideo.save();
+    });
     var newDirName = baseDirName + videoId + userId;
     if (!fs.existsSync(newDirName)) {
         try {

@@ -18,7 +18,7 @@ cron.schedule('*/5 * * * *', function() {
     Video.find()
     .exec(function (err, videos) {
         for (var i = 0; i < videos.length; i++) {
-            generate_highlight(videos[i].video_id);
+            generate_highlight(videos[i].video_id, videos[i].video_name);
         }
     });
 });
@@ -38,14 +38,35 @@ router.get('/', function(req, res, next) {
             console.log("No highlight")
         }
         else {
-            res.end("http://143.248.198.101:3000/" + highlight.highlight_url);
+            // Uncomment this when using this API for testing.
+            // res.end("http://143.248.198.68:3000/" + highlight.highlight_url);
         }
     });
 });
 
-function generate_highlight(query_video_id) {
+/*
+ * GET list of highlights
+ * returns {"items": [{ video_id: 'video_id', video_name: 'video_name', 
+ * highlight_url: 'highlight_url', thumbnail_url: 'thumbnail_url'}]}
+ */
+router.get('/list', function(req, res, next) {
+    Highlight
+    .find()
+    .select('video_id video_name highlight_url thumbnail_url')
+    .exec(function (err, highlights) {
+        console.log(highlights);    
+        if (err) console.error(err);
+        res.end(JSON.stringify({
+			items: highlights
+		}));
+    });
+});
+
+function generate_highlight(query_video_id, query_video_name) {
     console.log("generate highlight for " + query_video_id);
     var highlightId = 0;
+    /* temp code */
+    var thumbnailId = 0;
 
     Reaction.find({
         video_id: query_video_id
@@ -93,14 +114,18 @@ function generate_highlight(query_video_id) {
                         isHighlight = false;
                         regionEndIndex = i;
                         if (regionEndIndex - regionStartIndex > 5) {
+                            
                             var newHighlight = new Highlight({
                                 video_id: query_video_id,
                                 start: regionStartIndex,
                                 end: regionEndIndex,
-                                highlight_url: query_video_id + '_highlight_' + highlightId + '.mp4'
+                                highlight_url: query_video_id + '_highlight_' + highlightId + '.mp4',
+                                thumbnail_url: query_video_id + '_thumbnail_' + thumbnailId + '.jpg',
+                                video_name: query_video_name,
                             });
                             newHighlight.save();
                             highlightId += 1;
+                            thumbnailId += 1;
                         }
                     }
                 }
@@ -147,6 +172,13 @@ function generate_highlight(query_video_id) {
                     .on('error', function(err){
                         console.error(err);
                     }).run();
+
+                    ffmpeg('./public/' + query_video_id + '.mp4')
+                    .screenshots({
+                        timestamps: [start],
+                        filename: query_video_id + '_thumbnail_' + i + '.jpg',
+                        folder: './public/'
+                    });
                 }
             });
         });
